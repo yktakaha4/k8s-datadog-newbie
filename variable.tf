@@ -9,3 +9,6 @@ variable "resource_prefix" {
 variable "vpc_cidr_first_and_second_octets" {
   default = "172.16"
 }
+
+variable "datadog_api_key" {
+}

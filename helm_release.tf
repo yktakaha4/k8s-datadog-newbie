@@ -43,3 +43,25 @@ resource "helm_release" "metrics_server" {
     }
   )]
 }
+
+resource "helm_release" "datadog" {
+  name       = "datadog"
+  repository = "https://helm.datadoghq.com"
+  chart      = "datadog"
+  version    = "2.22.3"
+  namespace  = "kube-system"
+
+  values = [yamlencode(
+    {
+      datadog = {
+        site   = "datadoghq.com"
+        apiKey = var.datadog_api_key
+
+        logs = {
+          enabled = true
+          containerCollectAll = true
+        }
+      }
+    }
+  )]
+}
