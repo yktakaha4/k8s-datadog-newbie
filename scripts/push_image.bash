@@ -8,7 +8,7 @@ base_dir="$(
 echo "----- build -----"
 image_name="djangogirls"
 
-docker build -t "$image_name" "$base_dir"
+docker build --no-cache -t "$image_name" "$base_dir"
 
 echo "----- push -----"
 account_id="$(aws sts get-caller-identity --query Account --output text)"
