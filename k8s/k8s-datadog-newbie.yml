@@ -1,0 +1,178 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-datadog-newbie
+---
+################################################################################
+# fluentd-forwarder
+################################################################################
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-forwarder
+  namespace: k8s-datadog-newbie
+  labels:
+    app: fluentd-forwarder
+spec:
+  selector:
+    matchLabels:
+      app: fluentd-forwarder
+  template:
+    metadata:
+      labels:
+        app: fluentd-forwarder
+    spec:
+      containers:
+        - name: fluentd-forwarder
+          image: fluent/fluentd-kubernetes-daemonset:v1-debian-forward
+          # image: alpine
+          # command:
+          #   - "tail"
+          #   - "-f"
+          #   - "/dev/null"
+          env:
+            - name: FLUENT_FOWARD_HOST
+              value: "fluentd-aggregator.k8s-datadog-newbie.svc.cluster.local"
+            - name: FLUENT_FOWARD_PORT
+              value: "24224"
+            - name: FLUENTD_SYSTEMD_CONF
+              value: "disable"
+            - name: FLUENTD_PROMETHEUS_CONF
+              value: "disable"
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+---
+################################################################################
+# fluentd-aggregator
+################################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluentd-aggregator
+  namespace: k8s-datadog-newbie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fluentd-aggregator
+  template:
+    metadata:
+      labels:
+        app: fluentd-aggregator
+    spec:
+      containers:
+        - image: yktakaha4/fluentd-aggregator:latest
+          imagePullPolicy: Always
+          name: fluentd-aggregator
+          ports:
+            - containerPort: 24224
+          env:
+            - name: DATADOG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: k8s-datadog-newbie-secret
+                  key: DATADOG_API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluentd-aggregator
+  namespace: k8s-datadog-newbie
+spec:
+  ports:
+    - port: 24224
+      targetPort: 24224
+      protocol: TCP
+  selector:
+    app: fluentd-aggregator
+---
+################################################################################
+# djangogirls
+################################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: djangogirls
+  namespace: k8s-datadog-newbie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: djangogirls
+  template:
+    metadata:
+      labels:
+        app: djangogirls
+    spec:
+      containers:
+        - image: yktakaha4/djangogirls:latest
+          imagePullPolicy: Always
+          name: djangogirls
+          ports:
+            - containerPort: 8000
+          env:
+            - name: POSTGRES_USER
+              value: djangogirls
+            - name: POSTGRES_PASSWORD
+              value: k8s-datadog-newbie
+          command:
+            - "./entrypoint.bash"
+        - image: postgres:9.6.23
+          imagePullPolicy: Always
+          name: postgres
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: djangogirls
+            - name: POSTGRES_USER
+              value: djangogirls
+            - name: POSTGRES_PASSWORD
+              value: k8s-datadog-newbie
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: djangogirls
+  namespace: k8s-datadog-newbie
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: djangogirls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: djangogirls-alb
+  namespace: k8s-datadog-newbie
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/success-codes: 200-399
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /*
+            pathType: Prefix
+            backend:
+              service:
+                name: djangogirls
+                port:
+                  number: 80

@@ -2,4 +2,8 @@ export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
 export AWS_DEFAULT_REGION=ap-northeast-1
 
-export TF_VAR_datadog_api_key=
+export DATADOG_API_KEY=
+export TF_VAR_datadog_api_key="$DATADOG_API_KEY"
+
+export DOCKER_HUB_USERNAME=
+export DOCKER_HUB_PASSWORD=
