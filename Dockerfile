@@ -8,6 +8,7 @@ RUN apt-get -y update \
   && npm install npm@latest -g
 
 COPY ./djangogirls /djangogirls
+COPY ./scripts/djangogirls_entrypoint.bash /djangogirls
 
 WORKDIR /djangogirls
 
