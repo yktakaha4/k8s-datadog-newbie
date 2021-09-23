@@ -1,0 +1,3 @@
+[submodule "djangogirls"]
+	path = djangogirls
+	url = git@github.com:DjangoGirls/djangogirls.git
