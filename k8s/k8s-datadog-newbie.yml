@@ -6,11 +6,46 @@ metadata:
 ################################################################################
 # fluentd-forwarder
 ################################################################################
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluentd
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fluentd
+  namespace: kube-system
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: fluentd
+roleRef:
+  kind: ClusterRole
+  name: fluentd
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: fluentd
+    namespace: kube-system
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: fluentd-forwarder
-  namespace: k8s-datadog-newbie
+  namespace: kube-system
   labels:
     app: fluentd-forwarder
 spec:
@@ -22,12 +57,17 @@ spec:
       labels:
         app: fluentd-forwarder
     spec:
+      serviceAccount: fluentd
+      serviceAccountName: fluentd
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       containers:
         - name: fluentd-forwarder
           image: fluent/fluentd-kubernetes-daemonset:v1-debian-forward
           env:
             - name: FLUENT_FOWARD_HOST
-              value: "fluentd-aggregator.k8s-datadog-newbie.svc.cluster.local"
+              value: "fluentd-aggregator.kube-system.svc.cluster.local"
             - name: FLUENT_FOWARD_PORT
               value: "24224"
             - name: FLUENTD_SYSTEMD_CONF
@@ -56,7 +96,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fluentd-aggregator
-  namespace: k8s-datadog-newbie
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -79,12 +119,13 @@ spec:
                 secretKeyRef:
                   name: k8s-datadog-newbie-secret
                   key: DATADOG_API_KEY
+      terminationGracePeriodSeconds: 30
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: fluentd-aggregator
-  namespace: k8s-datadog-newbie
+  namespace: kube-system
 spec:
   ports:
     - port: 24224

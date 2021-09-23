@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-namespace="k8s-datadog-newbie"
+namespace="kube-system"
 secret_name="k8s-datadog-newbie-secret"
 
 kubectl delete secret -n "$namespace" "$secret_name" 2>/dev/null || echo "skip delete."
