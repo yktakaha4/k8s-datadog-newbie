@@ -58,7 +58,7 @@ resource "helm_release" "datadog" {
         apiKey = var.datadog_api_key
 
         logs = {
-          enabled = true
+          enabled             = true
           containerCollectAll = true
         }
       }
