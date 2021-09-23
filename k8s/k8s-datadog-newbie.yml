@@ -25,11 +25,6 @@ spec:
       containers:
         - name: fluentd-forwarder
           image: fluent/fluentd-kubernetes-daemonset:v1-debian-forward
-          # image: alpine
-          # command:
-          #   - "tail"
-          #   - "-f"
-          #   - "/dev/null"
           env:
             - name: FLUENT_FOWARD_HOST
               value: "fluentd-aggregator.k8s-datadog-newbie.svc.cluster.local"

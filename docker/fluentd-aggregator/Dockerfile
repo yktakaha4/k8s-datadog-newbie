@@ -7,3 +7,5 @@ RUN gem install fluent-plugin-datadog
 USER fluent
 
 COPY fluent.conf /fluentd/etc/
+
+CMD ["fluentd", "-o", "/fluentd/log/fluentd.log"]
