@@ -15,4 +15,4 @@ WORKDIR /djangogirls
 RUN pip install pip-tools \
   && pip-sync \
   && npm install \
-  && npx gulp build
+  && npx gulp local
