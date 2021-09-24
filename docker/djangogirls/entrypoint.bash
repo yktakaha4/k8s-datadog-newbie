@@ -8,4 +8,4 @@ done
 ./manage.py migrate
 ./manage.py loaddata sample_db.json
 
-./manage.py runserver 0.0.0.0:8000
+ddtrace-run ./manage.py runserver 0.0.0.0:8000

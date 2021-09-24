@@ -53,6 +53,7 @@ resource "helm_release" "datadog" {
 
   values = [yamlencode(
     {
+      targetSystem = "linux"
       datadog = {
         site   = "datadoghq.com"
         apiKey = var.datadog_api_key
@@ -60,6 +61,10 @@ resource "helm_release" "datadog" {
         logs = {
           enabled             = true
           containerCollectAll = true
+        }
+
+        apm = {
+          enabled = true
         }
       }
     }
