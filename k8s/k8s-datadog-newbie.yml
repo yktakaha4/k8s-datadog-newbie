@@ -167,6 +167,10 @@ spec:
                 secretKeyRef:
                   name: k8s-datadog-newbie-secret
                   key: DATADOG_API_KEY
+            - name: DD_RUNTIME_METRICS_ENABLED
+              value: "true"
+            - name: DD_SERVICE
+              value: "djangogirls"
           command:
             - "./entrypoint.bash"
         - image: postgres:9.6.23
