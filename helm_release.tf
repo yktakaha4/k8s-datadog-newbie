@@ -63,8 +63,14 @@ resource "helm_release" "datadog" {
           containerCollectAll = true
         }
 
+        dogstatsd = {
+          useSocketVolume = false
+          useHostPort = true
+        }
+
         apm = {
           enabled = true
+          portEnabled = true
         }
       }
     }
